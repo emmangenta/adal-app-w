@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LLMGeneratedContent } from "./types";
 
+/** Gemini API model id (Google AI / AI Studio). */
+export const GEMINI_MODEL = "gemini-3.1-flash-lite" as const;
+
 /** Read at request time (not at import time) so Vercel/serverless env is visible. */
 export function getGeminiApiKey(): string | undefined {
   const candidates = [
@@ -31,7 +34,7 @@ export async function generateFlashcardsAndQuizzes(
   const genAI = new GoogleGenerativeAI(apiKey);
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `You are an educational content expert. Analyze the following document and generate study materials.
 
@@ -98,7 +101,7 @@ export async function testGeminiConnection(): Promise<boolean> {
   if (!apiKey) return false;
   const genAI = new GoogleGenerativeAI(apiKey);
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     const result = await model.generateContent("Hello");
     return !!result.response;
   } catch (error) {
