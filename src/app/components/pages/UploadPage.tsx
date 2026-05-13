@@ -105,8 +105,13 @@ export function UploadPage() {
       });
 
       if (!processResponse.ok) {
-        const err = await processResponse.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to process documents");
+        const err = await processResponse.json().catch(() => ({} as Record<string, unknown>));
+        const base =
+          (typeof err.error === "string" && err.error) || "Failed to process documents";
+        const details = Array.isArray(err.details)
+          ? (err.details as string[]).join(" — ")
+          : "";
+        throw new Error(details ? `${base} (${details})` : base);
       }
 
       const processData = await processResponse.json();

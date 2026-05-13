@@ -8,6 +8,16 @@ export function getCurrentTimestamp(): string {
   return new Date().toISOString();
 }
 
+/** Browsers often send an empty `type`; infer from extension for PDF/DOCX. */
+export function inferMimeFromFilename(filename: string): string {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".docx")) {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  return "";
+}
+
 export async function extractTextFromPDF(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const { PDFParse } = await import("pdf-parse");
@@ -28,7 +38,7 @@ export async function extractTextFromWord(file: File): Promise<string> {
 }
 
 export async function extractTextFromDocument(file: File): Promise<string> {
-  const mimeType = file.type;
+  const mimeType = file.type || inferMimeFromFilename(file.name);
 
   if (mimeType === "application/pdf") {
     return extractTextFromPDF(file);
@@ -38,6 +48,8 @@ export async function extractTextFromDocument(file: File): Promise<string> {
   ) {
     return extractTextFromWord(file);
   } else {
-    throw new Error(`Unsupported file type: ${mimeType}`);
+    throw new Error(
+      `Unsupported file type: "${mimeType || "(empty)"}" for ${file.name}. Use .pdf or .docx.`
+    );
   }
 }

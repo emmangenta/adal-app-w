@@ -4,45 +4,7 @@ import type { LLMGeneratedContent } from "./types";
 /** Gemini API model id (Google AI / AI Studio). */
 export const GEMINI_MODEL = "gemini-3.1-flash-lite" as const;
 
-/** Read at request time (not at import time) so Vercel/serverless env is visible. */
-export function getGeminiApiKey(): string | undefined {
-  const candidates = [
-    process.env.GOOGLE_GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY,
-    process.env.GOOGLE_AI_API_KEY,
-  ];
-  for (const c of candidates) {
-    if (typeof c === "string") {
-      const t = c.trim();
-      if (t.length > 0) return t;
-    }
-  }
-  return undefined;
-}
-
-export async function generateFlashcardsAndQuizzes(
-  documentText: string,
-  documentName: string
-): Promise<LLMGeneratedContent> {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error(
-      "Missing Gemini API key. Set GOOGLE_GEMINI_API_KEY or GEMINI_API_KEY in the server environment."
-    );
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-
-  try {
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-
-    const prompt = `You are an educational content expert. Analyze the following document and generate study materials.
-
-Document: "${documentName}"
-Content:
-${documentText}
-
-Generate 10 high-quality flashcards and 5 multiple-choice quiz questions based on the content above.
+const STUDY_JSON_INSTRUCTIONS = `Generate 10 high-quality flashcards and 5 multiple-choice quiz questions based on the content above.
 
 Return the response as a valid JSON object with this exact structure (NO markdown, NO code blocks, just raw JSON):
 {
@@ -62,36 +24,109 @@ Return the response as a valid JSON object with this exact structure (NO markdow
   ]
 }
 
-IMPORTANT: 
+IMPORTANT:
 - Flashcards should be concise and focused
 - Quiz questions should test understanding, not just recall
-- Options array should have 4 options
+- Options array must have 4 options
 - correctOption is the index (0-3) of the correct option
 - Return ONLY the JSON, no other text`;
 
+function parseStudyMaterialsJson(rawModelText: string): LLMGeneratedContent {
+  const jsonMatch = rawModelText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Failed to extract JSON from LLM response");
+  }
+  const generatedContent: LLMGeneratedContent = JSON.parse(jsonMatch[0]);
+  if (!Array.isArray(generatedContent.flashcards)) {
+    throw new Error("Invalid flashcards format");
+  }
+  if (!Array.isArray(generatedContent.quizzes)) {
+    throw new Error("Invalid quizzes format");
+  }
+  return generatedContent;
+}
+
+/** Read at request time (not at import time) so Vercel/serverless env is visible. */
+export function getGeminiApiKey(): string | undefined {
+  const candidates = [
+    process.env.GOOGLE_GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.GOOGLE_AI_API_KEY,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string") {
+      const t = c.trim();
+      if (t.length > 0) return t;
+    }
+  }
+  return undefined;
+}
+
+function getModel() {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error(
+      "Missing Gemini API key. Set GOOGLE_GEMINI_API_KEY or GEMINI_API_KEY in the server environment."
+    );
+  }
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: GEMINI_MODEL });
+}
+
+/** Plain-text path (e.g. extracted DOCX / PDF text). */
+export async function generateFlashcardsAndQuizzes(
+  documentText: string,
+  documentName: string
+): Promise<LLMGeneratedContent> {
+  const model = getModel();
+
+  const prompt = `You are an educational content expert. Analyze the following document and generate study materials.
+
+Document: "${documentName}"
+Content:
+${documentText}
+
+${STUDY_JSON_INSTRUCTIONS}`;
+
+  try {
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-
-    // Parse the JSON response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Failed to extract JSON from LLM response");
-    }
-
-    const generatedContent: LLMGeneratedContent = JSON.parse(jsonMatch[0]);
-
-    // Validate structure
-    if (!Array.isArray(generatedContent.flashcards)) {
-      throw new Error("Invalid flashcards format");
-    }
-    if (!Array.isArray(generatedContent.quizzes)) {
-      throw new Error("Invalid quizzes format");
-    }
-
-    return generatedContent;
+    const text = result.response.text();
+    return parseStudyMaterialsJson(text);
   } catch (error) {
     console.error("Error generating content with Gemini:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send the raw PDF to Gemini (avoids local pdf-parse, which often fails on Vercel serverless).
+ */
+export async function generateFlashcardsAndQuizzesFromPdfBuffer(
+  pdfBuffer: ArrayBuffer,
+  documentName: string
+): Promise<LLMGeneratedContent> {
+  const model = getModel();
+  const base64 = Buffer.from(new Uint8Array(pdfBuffer)).toString("base64");
+
+  const prompt = `You are an educational content expert. The attached PDF is named "${documentName}".
+Read the entire PDF and generate study materials from its content.
+
+${STUDY_JSON_INSTRUCTIONS}`;
+
+  try {
+    const result = await model.generateContent([
+      { text: prompt },
+      {
+        inlineData: {
+          mimeType: "application/pdf",
+          data: base64,
+        },
+      },
+    ]);
+    const text = result.response.text();
+    return parseStudyMaterialsJson(text);
+  } catch (error) {
+    console.error("Error generating content with Gemini (PDF):", error);
     throw error;
   }
 }
