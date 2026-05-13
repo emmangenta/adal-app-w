@@ -1,3 +1,5 @@
+"use client";
+
 import { useApp } from "../../context/AppContext";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";

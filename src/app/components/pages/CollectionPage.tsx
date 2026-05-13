@@ -1,3 +1,5 @@
+"use client";
+
 import { useApp } from "../../context/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
