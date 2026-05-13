@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateFlashcardsAndQuizzes } from "@/lib/gemini";
+import { generateFlashcardsAndQuizzes, getGeminiApiKey } from "@/lib/gemini";
 import { extractTextFromDocument, generateId, getCurrentTimestamp } from "@/lib/utils-server";
 import type { LLMGeneratedContent } from "@/lib/types";
 
@@ -11,11 +11,11 @@ export const runtime = "nodejs";
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    if (!getGeminiApiKey()) {
       return NextResponse.json(
         {
           error:
-            "Gemini API key not configured. Add GOOGLE_GEMINI_API_KEY to environment variables.",
+            "Gemini API key not configured. In Vercel, add GOOGLE_GEMINI_API_KEY or GEMINI_API_KEY for Production (and redeploy).",
         },
         { status: 500 }
       );

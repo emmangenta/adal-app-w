@@ -1,14 +1,37 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LLMGeneratedContent } from "./types";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
+/** Read at request time (not at import time) so Vercel/serverless env is visible. */
+export function getGeminiApiKey(): string | undefined {
+  const candidates = [
+    process.env.GOOGLE_GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.GOOGLE_AI_API_KEY,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string") {
+      const t = c.trim();
+      if (t.length > 0) return t;
+    }
+  }
+  return undefined;
+}
 
 export async function generateFlashcardsAndQuizzes(
   documentText: string,
   documentName: string
 ): Promise<LLMGeneratedContent> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error(
+      "Missing Gemini API key. Set GOOGLE_GEMINI_API_KEY or GEMINI_API_KEY in the server environment."
+    );
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `You are an educational content expert. Analyze the following document and generate study materials.
 
@@ -71,8 +94,11 @@ IMPORTANT:
 }
 
 export async function testGeminiConnection(): Promise<boolean> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return false;
+  const genAI = new GoogleGenerativeAI(apiKey);
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent("Hello");
     return !!result.response;
   } catch (error) {
