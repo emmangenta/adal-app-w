@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LLMGeneratedContent } from "./types";
 
 /** Gemini API model id (Google AI / AI Studio). */
-export const GEMINI_MODEL = "gemini-3.1-flash-lite" as const;
+export const GEMINI_MODEL = "gemini-3-flash-preview" as const;
 
 const STUDY_JSON_INSTRUCTIONS = `Generate 10 high-quality flashcards and 5 multiple-choice quiz questions based on the content above.
 
