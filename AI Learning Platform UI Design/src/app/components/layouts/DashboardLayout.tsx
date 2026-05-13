@@ -50,7 +50,7 @@ export function DashboardLayout() {
       <aside className="w-64 border-r border-border bg-card flex flex-col">
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            LearnAI
+            ADAL
           </h1>
         </div>
 

@@ -8,7 +8,7 @@ export function LandingPage() {
       <header className="border-b border-border bg-card/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            LearnAI
+            ADAL
           </h1>
           <div className="flex gap-3">
             <Link to="/login">
@@ -95,7 +95,7 @@ export function LandingPage() {
 
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
-          <p>© 2026 LearnAI. Research prototype for educational purposes.</p>
+          <p>© 2026 ADAL. Research prototype for educational purposes.</p>
         </div>
       </footer>
     </div>
