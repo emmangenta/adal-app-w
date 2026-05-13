@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/app/api/process-documents/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
