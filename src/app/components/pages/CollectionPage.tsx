@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useApp } from "../../context/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -121,7 +122,19 @@ function BrainrotGrid({
             <CardContent className="p-6 flex flex-col items-center gap-3">
               {brainrot.unlocked ? (
                 <>
-                  <div className="text-6xl">{brainrot.image}</div>
+                  {brainrot.image.startsWith("/") ? (
+                    <div className="relative size-24">
+                      <Image
+                        src={brainrot.image}
+                        alt=""
+                        fill
+                        className="object-contain"
+                        sizes="96px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-6xl">{brainrot.image}</div>
+                  )}
                   <div className="text-center space-y-1">
                     <p className="font-medium text-sm">{brainrot.name}</p>
                     <Badge

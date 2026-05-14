@@ -44,3 +44,13 @@ export interface LLMGeneratedContent {
     explanation: string;
   }>;
 }
+
+/** Structured output from Gemini for Feynman evaluation. */
+export interface FeynmanEvaluateResult {
+  reply: string;
+  spotOn: boolean;
+  accuracyScore: number;
+  strengths: string[];
+  missing: string[];
+  improvements: string[];
+}

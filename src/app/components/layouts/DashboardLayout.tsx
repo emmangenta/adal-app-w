@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useApp } from "../../context/AppContext";
+import { usePomodoro } from "../../context/PomodoroContext";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { cn } from "../ui/utils";
@@ -12,6 +13,8 @@ import {
   BookOpen,
   Brain,
   Timer,
+  Play,
+  Pause,
   Gift,
   Library,
   Settings,
@@ -19,6 +22,39 @@ import {
   Coins,
 } from "lucide-react";
 import { useEffect } from "react";
+
+function PomodoroMiniDock() {
+  const pathname = usePathname();
+  const { minutes, seconds, isRunning, isBreak, start, pause } = usePomodoro();
+  const onPomodoroPage = pathname === "/app/pomodoro";
+
+  if (onPomodoroPage) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl border border-border bg-card/95 backdrop-blur px-3 py-2 shadow-lg">
+      <div className="flex flex-col min-w-[7rem]">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          {isBreak ? "Break" : "Pomodoro"}
+        </span>
+        <span className="font-mono text-lg font-semibold tabular-nums leading-none">
+          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+        </span>
+      </div>
+      {!isRunning ? (
+        <Button type="button" size="icon" variant="secondary" className="shrink-0" onClick={start}>
+          <Play className="size-4" />
+        </Button>
+      ) : (
+        <Button type="button" size="icon" variant="secondary" className="shrink-0" onClick={pause}>
+          <Pause className="size-4" />
+        </Button>
+      )}
+      <Button type="button" size="sm" variant="outline" asChild className="shrink-0">
+        <Link href="/app/pomodoro">Open</Link>
+      </Button>
+    </div>
+  );
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useApp();
@@ -119,6 +155,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      <PomodoroMiniDock />
     </div>
   );
 }

@@ -87,18 +87,18 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialBrainrots: Brainrot[] = [
-  { id: "1", name: "Study Owl", rarity: "common", image: "🦉", unlocked: true },
-  { id: "2", name: "Brain", rarity: "common", image: "🧠", unlocked: true },
-  { id: "3", name: "Lightning", rarity: "rare", image: "⚡", unlocked: false },
-  { id: "4", name: "Star", rarity: "rare", image: "⭐", unlocked: false },
-  { id: "5", name: "Fire", rarity: "epic", image: "🔥", unlocked: false },
-  { id: "6", name: "Trophy", rarity: "epic", image: "🏆", unlocked: false },
-  { id: "7", name: "Diamond", rarity: "legendary", image: "💎", unlocked: false },
-  { id: "8", name: "Crown", rarity: "legendary", image: "👑", unlocked: false },
-  { id: "9", name: "Book", rarity: "common", image: "📚", unlocked: false },
-  { id: "10", name: "Rocket", rarity: "rare", image: "🚀", unlocked: false },
-  { id: "11", name: "Magic", rarity: "epic", image: "✨", unlocked: false },
-  { id: "12", name: "Galaxy", rarity: "legendary", image: "🌌", unlocked: false },
+  { id: "1", name: "Skibidi Scholar", rarity: "common", image: "/brainrots/br-1.svg", unlocked: true },
+  { id: "2", name: "Ohio Oracle", rarity: "common", image: "/brainrots/br-2.svg", unlocked: true },
+  { id: "3", name: "Rizzler Rex", rarity: "rare", image: "/brainrots/br-3.svg", unlocked: false },
+  { id: "4", name: "Gyatt Golem", rarity: "rare", image: "/brainrots/br-4.svg", unlocked: false },
+  { id: "5", name: "Fanum Taxinator", rarity: "epic", image: "/brainrots/br-5.svg", unlocked: false },
+  { id: "6", name: "Sigma Skeleton", rarity: "epic", image: "/brainrots/br-6.svg", unlocked: false },
+  { id: "7", name: "Grimace Giga-Chad", rarity: "legendary", image: "/brainrots/br-7.svg", unlocked: false },
+  { id: "8", name: "Baby Gronkulus", rarity: "legendary", image: "/brainrots/br-8.svg", unlocked: false },
+  { id: "9", name: "Mewing Maven", rarity: "common", image: "/brainrots/br-9.svg", unlocked: false },
+  { id: "10", name: "Aura Farmer", rarity: "rare", image: "/brainrots/br-10.svg", unlocked: false },
+  { id: "11", name: "Capstone No-Cap", rarity: "epic", image: "/brainrots/br-11.svg", unlocked: false },
+  { id: "12", name: "Based Blob", rarity: "legendary", image: "/brainrots/br-12.svg", unlocked: false },
 ];
 
 const initialTasks: Task[] = [

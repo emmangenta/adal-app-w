@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Capstone No-Cap">
+  <defs><linearGradient id="k" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a21caf"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+  <rect width="120" height="120" rx="20" fill="url(#k)"/>
+  <rect x="30" y="36" width="60" height="48" rx="16" fill="#fff" opacity="0.95"/>
+  <path d="M42 52h36M42 64h28" stroke="#4a044e" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="60" cy="76" r="5" fill="#4a044e"/>
+  <text x="60" y="104" text-anchor="middle" fill="#fff" font-size="10" font-family="system-ui,sans-serif" font-weight="700">No Cap</text>
+</svg>

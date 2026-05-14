@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Baby Gronkulus">
+  <defs><linearGradient id="h" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#eab308"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs>
+  <rect width="120" height="120" rx="20" fill="url(#h)"/>
+  <circle cx="60" cy="56" r="30" fill="#fff" opacity="0.95"/>
+  <circle cx="48" cy="52" r="5" fill="#422006"/><circle cx="72" cy="52" r="5" fill="#422006"/>
+  <path d="M48 68 Q60 76 72 68" fill="none" stroke="#422006" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="60" y="102" text-anchor="middle" fill="#fff" font-size="10" font-family="system-ui,sans-serif" font-weight="700">Gronk</text>
+</svg>

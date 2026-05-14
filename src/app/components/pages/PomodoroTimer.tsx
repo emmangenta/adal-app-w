@@ -1,89 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useApp } from "../../context/AppContext";
+import { usePomodoro } from "../../context/PomodoroContext";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { toast } from "sonner";
 import { Play, Pause, RotateCw, Coffee } from "lucide-react";
 import { motion } from "motion/react";
-import confetti from "canvas-confetti";
-
-const POMODORO_TIME = 25 * 60;
-const BREAK_TIME = 5 * 60;
 
 export function PomodoroTimer() {
-  const { addXP, addCoins } = useApp();
-  const [timeLeft, setTimeLeft] = useState(POMODORO_TIME);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isBreak, setIsBreak] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((time) => time - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      handleTimerComplete();
-    }
-
-    return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
-
-  const handleTimerComplete = () => {
-    setIsRunning(false);
-
-    if (!isBreak) {
-      setSessionsCompleted(sessionsCompleted + 1);
-      addXP(30);
-      addCoins(5);
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.6 },
-      });
-      toast.success("Pomodoro completed! +30 XP, +5 coins", {
-        icon: "🎉",
-      });
-      setIsBreak(true);
-      setTimeLeft(BREAK_TIME);
-    } else {
-      toast.success("Break complete! Ready for another session?", {
-        icon: <Coffee className="size-4" />,
-      });
-      setIsBreak(false);
-      setTimeLeft(POMODORO_TIME);
-    }
-  };
-
-  const handleStart = () => {
-    setIsRunning(true);
-  };
-
-  const handlePause = () => {
-    setIsRunning(false);
-  };
-
-  const handleReset = () => {
-    setIsRunning(false);
-    setTimeLeft(isBreak ? BREAK_TIME : POMODORO_TIME);
-  };
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const progress = isBreak
-    ? ((BREAK_TIME - timeLeft) / BREAK_TIME) * 100
-    : ((POMODORO_TIME - timeLeft) / POMODORO_TIME) * 100;
+  const {
+    isRunning,
+    isBreak,
+    sessionsCompleted,
+    progress,
+    minutes,
+    seconds,
+    start,
+    pause,
+    reset,
+  } = usePomodoro();
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold mb-2">Pomodoro Timer</h1>
         <p className="text-muted-foreground">
-          Stay focused with the Pomodoro Technique: 25 minutes work, 5 minutes break
+          Stay focused with the Pomodoro Technique: 25 minutes work, 5 minutes break. The timer keeps
+          running while you browse other pages.
         </p>
       </div>
 
@@ -102,9 +44,7 @@ export function PomodoroTimer() {
             <CardTitle className="text-sm font-medium">Total XP Earned</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">
-              {sessionsCompleted * 30}
-            </div>
+            <div className="text-3xl font-bold text-purple-600">{sessionsCompleted * 30}</div>
           </CardContent>
         </Card>
 
@@ -113,9 +53,7 @@ export function PomodoroTimer() {
             <CardTitle className="text-sm font-medium">Total Coins Earned</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-600">
-              {sessionsCompleted * 5}
-            </div>
+            <div className="text-3xl font-bold text-amber-600">{sessionsCompleted * 5}</div>
           </CardContent>
         </Card>
       </div>
@@ -180,17 +118,17 @@ export function PomodoroTimer() {
 
           <div className="flex gap-3 justify-center">
             {!isRunning ? (
-              <Button onClick={handleStart} size="lg" className="gap-2 min-w-32">
+              <Button onClick={start} size="lg" className="gap-2 min-w-32">
                 <Play className="size-5" />
                 Start
               </Button>
             ) : (
-              <Button onClick={handlePause} size="lg" variant="secondary" className="gap-2 min-w-32">
+              <Button onClick={pause} size="lg" variant="secondary" className="gap-2 min-w-32">
                 <Pause className="size-5" />
                 Pause
               </Button>
             )}
-            <Button onClick={handleReset} size="lg" variant="outline" className="gap-2">
+            <Button onClick={reset} size="lg" variant="outline" className="gap-2">
               <RotateCw className="size-5" />
               Reset
             </Button>
@@ -220,9 +158,7 @@ export function PomodoroTimer() {
             </div>
             <div>
               <p className="font-medium">Take a 5-minute break</p>
-              <p className="text-sm text-muted-foreground">
-                Relax, stretch, or grab a drink
-              </p>
+              <p className="text-sm text-muted-foreground">Relax, stretch, or grab a drink</p>
             </div>
           </div>
           <div className="flex items-start gap-3">

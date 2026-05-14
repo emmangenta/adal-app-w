@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { LLMGeneratedContent } from "./types";
+import type { FeynmanEvaluateResult, LLMGeneratedContent } from "./types";
 
 /** Gemini API model id (Google AI / AI Studio). */
 export const GEMINI_MODEL = "gemini-3-flash-preview" as const;
@@ -129,6 +129,87 @@ ${STUDY_JSON_INSTRUCTIONS}`;
     console.error("Error generating content with Gemini (PDF):", error);
     throw error;
   }
+}
+
+const FEYNMAN_EVAL_INSTRUCTIONS = `You are an expert tutor using the Feynman Technique.
+
+The learner will give you a TOPIC (or title) and their EXPLANATION in plain language.
+
+Your job:
+1. Internally recall the standard definition, core mechanisms, and common misconceptions for that topic.
+2. Judge whether their explanation is factually aligned with accepted understanding (not perfect wording, but correct ideas).
+3. Respond with ONLY valid JSON (no markdown fences, no commentary) in this exact shape:
+{
+  "reply": "2-4 sentences speaking directly to the learner: acknowledge effort, say whether they're on the right track, and one concrete next step.",
+  "spotOn": true or false,
+  "accuracyScore": integer from 0 to 100,
+  "strengths": ["short bullet", "..."],
+  "missing": ["important gap or misconception to fix", "..."],
+  "improvements": ["actionable suggestion", "..."]
+}
+
+Rules:
+- "spotOn" is true only if the explanation is substantially correct with no major factual errors and covers the main idea.
+- "missing" can be empty if nothing important is missing.
+- Each array should have 1-5 strings.
+- Be strict about factual accuracy; prefer honest low scores over false praise.`;
+
+function parseFeynmanEvalJson(raw: string): FeynmanEvaluateResult {
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Failed to extract JSON from Feynman evaluation");
+  }
+  const o = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+  const reply = typeof o.reply === "string" ? o.reply : "";
+  const spotOn = Boolean(o.spotOn);
+  let accuracyScore = Number(o.accuracyScore);
+  if (!Number.isFinite(accuracyScore)) accuracyScore = 0;
+  accuracyScore = Math.min(100, Math.max(0, Math.round(accuracyScore)));
+  const toStrArray = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  return {
+    reply,
+    spotOn,
+    accuracyScore,
+    strengths: toStrArray(o.strengths),
+    missing: toStrArray(o.missing),
+    improvements: toStrArray(o.improvements),
+  };
+}
+
+export async function feynmanEvaluate(
+  topic: string,
+  explanation: string
+): Promise<FeynmanEvaluateResult> {
+  const model = getModel();
+  const prompt = `${FEYNMAN_EVAL_INSTRUCTIONS}
+
+TOPIC: ${topic.trim() || "(not specified — infer from the explanation)"}
+
+LEARNER EXPLANATION:
+${explanation.trim()}`;
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+  return parseFeynmanEvalJson(text);
+}
+
+export async function feynmanChatReply(
+  topic: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>
+): Promise<string> {
+  const model = getModel();
+  const lines = messages.map((m) => `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content}`);
+  const prompt = `You are a patient tutor helping someone learn using the Feynman Technique.
+Topic focus: "${topic.trim() || "their study topic"}".
+
+Conversation:
+${lines.join("\n\n")}
+
+Write the next Tutor reply. Be concise (under ~180 words), accurate, and encouraging. If they paste a new explanation to assess, briefly evaluate accuracy and suggest improvements. Plain text only, no JSON.`;
+
+  const result = await model.generateContent(prompt);
+  return result.response.text().trim();
 }
 
 export async function testGeminiConnection(): Promise<boolean> {
