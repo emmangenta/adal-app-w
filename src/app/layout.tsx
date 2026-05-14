@@ -5,6 +5,11 @@ import "@/styles/index.css";
 export const metadata: Metadata = {
   title: "ADAL",
   description: "Gamified learning platform with AI-powered study tools",
+  openGraph: {
+    title: "ADAL",
+    description: "Gamified learning platform with AI-powered study tools",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
