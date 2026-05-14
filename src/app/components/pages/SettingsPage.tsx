@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -10,11 +11,16 @@ import { Sun, Moon, Trophy, Zap, Target } from "lucide-react";
 
 export function SettingsPage() {
   const { user, tasks } = useApp();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!user) return null;
 
-  const isDark = theme === "dark";
+  const isDark = mounted && resolvedTheme === "dark";
   const completedTasks = tasks.filter((t) => t.completed).length;
   const totalXP = user.xp;
   const totalCoins = user.coins;
@@ -34,7 +40,7 @@ export function SettingsPage() {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {isDark ? (
+              {mounted && isDark ? (
                 <Moon className="size-5 text-muted-foreground" />
               ) : (
                 <Sun className="size-5 text-muted-foreground" />
@@ -42,13 +48,18 @@ export function SettingsPage() {
               <div>
                 <Label htmlFor="dark-mode">Dark Mode</Label>
                 <p className="text-sm text-muted-foreground">
-                  {isDark ? "Using dark theme" : "Using light theme"}
+                  {!mounted
+                    ? "Resolving theme…"
+                    : isDark
+                      ? "Using dark theme"
+                      : "Using light theme"}
                 </p>
               </div>
             </div>
             <Switch
               id="dark-mode"
               checked={isDark}
+              disabled={!mounted}
               onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
             />
           </div>

@@ -162,6 +162,21 @@ function generateId() {
   return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
 }
 
+/** Keep registry row in sync so re-login after refresh restores latest XP/coins/brainrots. */
+function syncUserToRegistry(updated: User) {
+  try {
+    const usersJson = localStorage.getItem(DEMO_KEYS.usersRegistry) || "[]";
+    const users = JSON.parse(usersJson) as Array<User & { password: string }>;
+    const idx = users.findIndex((u) => u.id === updated.id);
+    if (idx === -1) return;
+    const password = users[idx].password;
+    users[idx] = { ...updated, password };
+    localStorage.setItem(DEMO_KEYS.usersRegistry, JSON.stringify(users));
+  } catch (e) {
+    console.error("Failed to sync user to registry:", e);
+  }
+}
+
 function brainrotsFromUser(user: User | null): Brainrot[] {
   if (!user?.brainrots?.length) {
     return initialBrainrots.map((b) => ({ ...b, unlocked: b.rarity === "common" }));
@@ -184,6 +199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const persistUser = useCallback((next: User | null) => {
     if (next) {
       localStorage.setItem(DEMO_KEYS.currentUser, JSON.stringify(next));
+      syncUserToRegistry(next);
     } else {
       localStorage.removeItem(DEMO_KEYS.currentUser);
     }
@@ -241,7 +257,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw new Error("Invalid username or password");
     }
 
-    const { password: _p, ...sessionUser } = found;
+    const { password: _p, ...fromRegistry } = found;
+
+    let sessionUser: User = fromRegistry;
+    try {
+      const raw = localStorage.getItem(DEMO_KEYS.currentUser);
+      if (raw) {
+        const cur = JSON.parse(raw) as User;
+        if (cur.id === fromRegistry.id) {
+          sessionUser = {
+            ...fromRegistry,
+            xp: cur.xp,
+            coins: cur.coins,
+            level: cur.level,
+            brainrots: cur.brainrots ?? fromRegistry.brainrots,
+          };
+        }
+      }
+    } catch {
+      /* use registry only */
+    }
+
     setUser(sessionUser);
     setUserId(sessionUser.id);
     setBrainrots(brainrotsFromUser(sessionUser));
@@ -300,10 +336,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addXP = (amount: number) => {
     if (!user) return;
+    const oldLevel = user.level;
     const newXp = user.xp + amount;
     const newLevel = Math.floor(newXp / 100) + 1;
     setUser({ ...user, xp: newXp, level: newLevel });
     toast.success(`+${amount} XP!`);
+    if (newLevel > oldLevel) {
+      toast.success(`Level up! You are now level ${newLevel}.`);
+    }
   };
 
   const addCoins = (amount: number) => {

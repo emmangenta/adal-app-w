@@ -57,21 +57,31 @@ function PomodoroMiniDock() {
 }
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useApp();
+  const { user, logout, isLoading } = useApp();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    if (isLoading) return;
     if (!user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, router, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">
+        Loading session…
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
   }
 
-  const xpProgress = (user.xp % 100);
+  const xpIntoLevel = user.xp % 100;
+  const xpProgress = xpIntoLevel;
   const xpNeeded = 100;
 
   const navItems = [

@@ -14,6 +14,10 @@ const ROLL_COST = 10;
 const WIN_INDEX = 42;
 const REEL_LEN = 55;
 const SLOT_PX = 108;
+/** Must match reel row: gap-2 (8px) between slots */
+const REEL_GAP_PX = 8;
+/** Must match reel row: px-2 horizontal padding inside the translated strip */
+const REEL_PAD_PX = 8;
 const SPIN_MS = 4800;
 
 function pickLockedBrainrot(locked: Brainrot[]): Brainrot | null {
@@ -61,6 +65,7 @@ export function GachaPage() {
   const [spinDurationMs, setSpinDurationMs] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const phaseRef = useRef(phase);
+  const winnerRef = useRef<Brainrot | null>(null);
   phaseRef.current = phase;
 
   const lockedBrainrots = brainrots.filter((b) => !b.unlocked);
@@ -101,6 +106,7 @@ export function GachaPage() {
 
     addCoins(-ROLL_COST);
     const reel = buildReel(w, brainrots);
+    winnerRef.current = w;
     setWinner(w);
     setStrip(reel);
     setTranslateX(0);
@@ -112,8 +118,9 @@ export function GachaPage() {
     if (phase !== "rolling" || strip.length === 0) return;
     const el = viewportRef.current;
     const w = el?.clientWidth ?? 360;
-    const centerOffset = w / 2 - SLOT_PX / 2;
-    const target = -(WIN_INDEX * SLOT_PX) + centerOffset;
+    const slotStride = SLOT_PX + REEL_GAP_PX;
+    const winCenterX = REEL_PAD_PX + WIN_INDEX * slotStride + SLOT_PX / 2;
+    const target = w / 2 - winCenterX;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setSpinDurationMs(SPIN_MS);
@@ -128,6 +135,7 @@ export function GachaPage() {
       setPhase("idle");
       setStrip([]);
       setWinner(null);
+      winnerRef.current = null;
       setTranslateX(0);
       setSpinDurationMs(0);
     }, 3200);
@@ -136,8 +144,10 @@ export function GachaPage() {
 
   const onReelTransitionEnd = (e: React.TransitionEvent) => {
     if (e.propertyName !== "transform") return;
-    if (phaseRef.current !== "rolling" || !winner) return;
-    finalizeRoll(winner);
+    if (phaseRef.current !== "rolling") return;
+    const w = winnerRef.current;
+    if (!w) return;
+    finalizeRoll(w);
   };
 
   if (!user) return null;

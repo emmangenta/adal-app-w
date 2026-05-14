@@ -55,7 +55,12 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen relative flex items-center justify-center p-6">
+      <div className="absolute left-4 top-4">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground hover:underline">
+          ← Back to home
+        </Link>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>

@@ -4,7 +4,9 @@ import type { FeynmanEvaluateResult, LLMGeneratedContent } from "./types";
 /** Gemini API model id (Google AI / AI Studio). */
 export const GEMINI_MODEL = "gemini-3-flash-preview" as const;
 
-const STUDY_JSON_INSTRUCTIONS = `Generate 10 high-quality flashcards and 5 multiple-choice quiz questions based on the content above.
+const STUDY_JSON_INSTRUCTIONS = `You are given a document that may be long (many pages). Read as much of it as you can and generate study materials that **cover the whole document broadly**: major themes, definitions, procedures, examples, and important details from early AND late sections. Do not only summarize the first pages.
+
+Return **at least** 28–36 flashcards and **at least** 18–24 multiple-choice quiz questions (more is fine if the document is rich), distributed across the document so a learner reviews the full scope of the material.
 
 Return the response as a valid JSON object with this exact structure (NO markdown, NO code blocks, just raw JSON):
 {
@@ -25,10 +27,10 @@ Return the response as a valid JSON object with this exact structure (NO markdow
 }
 
 IMPORTANT:
-- Flashcards should be concise and focused
-- Quiz questions should test understanding, not just recall
-- Options array must have 4 options
-- correctOption is the index (0-3) of the correct option
+- Flashcards should be concise and focused; avoid near-duplicate cards.
+- Quiz questions should test understanding across the document, not only the introduction.
+- Options array must have 4 options per quiz.
+- correctOption is the index (0-3) of the correct option.
 - Return ONLY the JSON, no other text`;
 
 function parseStudyMaterialsJson(rawModelText: string): LLMGeneratedContent {
