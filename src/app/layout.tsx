@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "@/styles/index.css";
 
 export const metadata: Metadata = {
-  title: "AI Learning Platform",
+  title: "ADAL",
   description: "Gamified learning platform with AI-powered study tools",
 };
 
