@@ -8,6 +8,11 @@ import {
   useEffect,
   useCallback,
 } from "react";
+
+/** Level from lifetime XP: level 1 at 0–99 XP, level 2 at 100–199, … */
+function levelFromTotalXp(xp: number): number {
+  return Math.floor(Math.max(0, xp) / 100) + 1;
+}
 import { toast } from "sonner";
 import { DEMO_KEYS } from "@/lib/client-demo-storage";
 import type { StoredDeck } from "@/lib/study-deck-types";
@@ -194,7 +199,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(raw) as User;
         if (cancelled) return;
-        setUser(parsed);
+        setUser({
+          ...parsed,
+          level: levelFromTotalXp(parsed.xp),
+        });
         setUserId(parsed.id);
         setBrainrots(brainrotsFromUser(parsed));
         const loadedDecks = await loadDecksForUser(parsed.id);
@@ -255,7 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ...fromRegistry,
             xp: cur.xp,
             coins: cur.coins,
-            level: cur.level,
+            level: levelFromTotalXp(cur.xp),
             brainrots: cur.brainrots ?? fromRegistry.brainrots,
           };
         }
@@ -320,23 +328,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(DEMO_KEYS.currentUser);
   };
 
-  const addXP = (amount: number) => {
-    if (!user) return;
-    const oldLevel = user.level;
-    const newXp = user.xp + amount;
-    const newLevel = Math.floor(newXp / 100) + 1;
-    setUser({ ...user, xp: newXp, level: newLevel });
-    toast.success(`+${amount} XP!`);
-    if (newLevel > oldLevel) {
-      toast.success(`Level up! You are now level ${newLevel}.`);
-    }
-  };
+  const addXP = useCallback((amount: number) => {
+    if (amount === 0) return;
+    let applied = false;
+    let oldLevel = 1;
+    let newLevel = 1;
+    setUser((prev) => {
+      if (!prev) return prev;
+      applied = true;
+      oldLevel = levelFromTotalXp(prev.xp);
+      const newXp = prev.xp + amount;
+      newLevel = levelFromTotalXp(newXp);
+      return { ...prev, xp: newXp, level: newLevel };
+    });
+    queueMicrotask(() => {
+      if (!applied) return;
+      toast.success(`+${amount} XP!`);
+      if (newLevel > oldLevel) {
+        toast.success(`Level up! You are now level ${newLevel}.`);
+      }
+    });
+  }, []);
 
-  const addCoins = (amount: number) => {
-    if (!user) return;
-    setUser({ ...user, coins: Math.max(0, user.coins + amount) });
-    if (amount > 0) toast.success(`+${amount} coins!`);
-  };
+  const addCoins = useCallback((amount: number) => {
+    let applied = false;
+    setUser((prev) => {
+      if (!prev) return prev;
+      applied = true;
+      return { ...prev, coins: Math.max(0, prev.coins + amount) };
+    });
+    if (amount > 0) {
+      queueMicrotask(() => {
+        if (applied) toast.success(`+${amount} coins!`);
+      });
+    }
+  }, []);
 
   const completeTask = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
@@ -347,23 +373,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addCoins(task.coinsReward);
   };
 
-  const unlockBrainrot = (brainrotId: string) => {
-    if (!user) return;
-    const def = BRAINROT_CATALOG_BASE.find((b) => b.id === brainrotId);
-    if (!def) return;
-
-    const existing = user.brainrots ?? [];
-    if (existing.some((b) => b.id === brainrotId)) return;
-
-    const nextBrainrots = [...existing, { ...def, unlocked: true }];
-    setUser({ ...user, brainrots: nextBrainrots });
-    setBrainrots(
-      initialBrainrots.map((b) => ({
-        ...b,
-        unlocked: nextBrainrots.some((u) => u.id === b.id),
-      }))
-    );
-  };
+  const unlockBrainrot = useCallback((brainrotId: string) => {
+    let nextBrainrots: Brainrot[] | null = null;
+    setUser((prev) => {
+      if (!prev) return prev;
+      const def = BRAINROT_CATALOG_BASE.find((b) => b.id === brainrotId);
+      if (!def) return prev;
+      const existing = prev.brainrots ?? [];
+      if (existing.some((b) => b.id === brainrotId)) return prev;
+      nextBrainrots = [...existing, { ...def, unlocked: true }];
+      return { ...prev, brainrots: nextBrainrots };
+    });
+    queueMicrotask(() => {
+      if (!nextBrainrots) return;
+      setBrainrots(
+        initialBrainrots.map((b) => ({
+          ...b,
+          unlocked: nextBrainrots!.some((u) => u.id === b.id),
+        }))
+      );
+    });
+  }, []);
 
   const addDeck = (deck: StoredDeck) => {
     setDecks((prev) => [...prev, sanitizeStoredDeck(deck)]);

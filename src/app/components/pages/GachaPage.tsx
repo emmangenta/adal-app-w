@@ -15,6 +15,7 @@ import {
   type BrainrotRarity,
 } from "@/lib/brainrot-catalog";
 import { firePullCelebration } from "@/lib/gacha-celebration";
+import { gachaRevealFrameClass, gachaSlotFrameClass } from "@/lib/brainrot-rarity-frame";
 
 const ROLL_COST = 10;
 const WIN_INDEX = 42;
@@ -52,13 +53,13 @@ function viewportAccent(
     case "epic":
       return "border-purple-400/70 shadow-[inset_0_0_32px_rgba(168,85,247,0.45)]";
     case "legendary":
-      return "border-amber-400/80 shadow-[inset_0_0_36px_rgba(245,158,11,0.45)]";
+      return "border-orange-500 shadow-[inset_0_0_36px_rgba(249,115,22,0.45)]";
     case "mythic":
-      return "border-cyan-400/80 shadow-[inset_0_0_40px_rgba(34,211,238,0.5)]";
+      return "border-yellow-400/80 shadow-[inset_0_0_40px_rgba(0,0,0,0.45)]";
     case "brainrot_god":
-      return "border-red-500/70 shadow-[inset_0_0_48px_rgba(239,68,68,0.55)] animate-pulse";
+      return "border-white/30 shadow-[0_0_52px_rgba(168,85,247,0.45),0_0_52px_rgba(234,179,8,0.25),inset_0_0_48px_rgba(59,130,246,0.2)]";
     case "secret":
-      return "border-fuchsia-400 shadow-[0_0_48px_rgba(217,70,239,0.55),inset_0_0_52px_rgba(250,204,21,0.35)]";
+      return "border-neutral-200 shadow-[inset_0_0_48px_rgba(0,0,0,0.55),0_0_40px_rgba(255,255,255,0.2)]";
     default:
       return "border-amber-500/40";
   }
@@ -68,12 +69,13 @@ function needleGlow(rarity: BrainrotRarity | undefined, phase: "idle" | "rolling
   if (phase !== "rolling" || !rarity) return "bg-amber-500/90 shadow-[0_0_18px_rgba(245,158,11,0.9)]";
   switch (rarity) {
     case "secret":
+      return "bg-gradient-to-b from-white via-neutral-400 to-black shadow-[0_0_24px_rgba(255,255,255,0.85)]";
     case "brainrot_god":
-      return "bg-fuchsia-400 shadow-[0_0_28px_rgba(217,70,239,1)]";
+      return "bg-[linear-gradient(180deg,#ef4444,#f97316,#eab308,#22c55e,#3b82f6,#a855f7)] shadow-[0_0_28px_rgba(168,85,247,0.95)]";
     case "mythic":
-      return "bg-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.95)]";
+      return "bg-gradient-to-b from-yellow-300 to-black shadow-[0_0_22px_rgba(234,179,8,0.95)]";
     case "legendary":
-      return "bg-amber-300 shadow-[0_0_22px_rgba(251,191,36,0.95)]";
+      return "bg-orange-400 shadow-[0_0_22px_rgba(249,115,22,0.95)]";
     default:
       return "bg-amber-500/90 shadow-[0_0_18px_rgba(245,158,11,0.9)]";
   }
@@ -176,13 +178,14 @@ export function GachaPage() {
   if (!user) return null;
 
   const rarityColors: Record<BrainrotRarity, string> = {
-    common: "text-gray-600 bg-gray-500/10 border-gray-500/20",
-    rare: "text-blue-600 bg-blue-500/10 border-blue-500/20",
-    epic: "text-purple-600 bg-purple-500/10 border-purple-500/20",
-    legendary: "text-amber-600 bg-amber-500/10 border-amber-500/20",
-    mythic: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20",
-    brainrot_god: "text-red-600 bg-red-500/10 border-red-500/20",
-    secret: "text-fuchsia-600 bg-fuchsia-500/10 border-fuchsia-500/20",
+    common: "text-slate-700 bg-slate-500/10 border-slate-500/30",
+    rare: "text-blue-600 bg-blue-500/10 border-blue-500/30",
+    epic: "text-purple-600 bg-purple-500/10 border-purple-500/30",
+    legendary: "text-orange-700 bg-orange-500/15 border-orange-500/50",
+    mythic: "text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-black/40 border border-yellow-500/40",
+    brainrot_god:
+      "text-white bg-[linear-gradient(90deg,#ef4444,#f97316,#eab308,#22c55e,#3b82f6,#a855f7)]/20 border border-white/30",
+    secret: "text-neutral-100 bg-gradient-to-r from-white/25 to-black/50 border border-neutral-300/50",
   };
 
   const weightSum = Object.values(BRAINROT_TIER_WEIGHTS).reduce((a, b) => a + b, 0);
@@ -195,13 +198,14 @@ export function GachaPage() {
   }));
 
   const tierRowShell: Record<BrainrotRarity, string> = {
-    common: "border-gray-500/20 bg-gray-500/10",
-    rare: "border-blue-500/20 bg-blue-500/10",
-    epic: "border-purple-500/20 bg-purple-500/10",
-    legendary: "border-amber-500/20 bg-amber-500/10",
-    mythic: "border-cyan-500/20 bg-cyan-500/10",
-    brainrot_god: "border-red-500/20 bg-red-500/10",
-    secret: "border-fuchsia-500/20 bg-fuchsia-500/10",
+    common: "border-slate-500/25 bg-slate-500/10",
+    rare: "border-blue-500/25 bg-blue-500/10",
+    epic: "border-purple-500/25 bg-purple-500/10",
+    legendary: "border-orange-500/40 bg-orange-500/10",
+    mythic: "border-yellow-500/35 bg-gradient-to-r from-yellow-500/15 to-black/30",
+    brainrot_god:
+      "border-white/20 bg-[linear-gradient(90deg,rgba(239,68,68,0.12),rgba(234,179,8,0.12),rgba(59,130,246,0.12),rgba(168,85,247,0.12))]",
+    secret: "border-neutral-300/30 bg-gradient-to-r from-white/10 to-black/25",
   };
 
   return (
@@ -259,39 +263,49 @@ export function GachaPage() {
                 {strip.map((b, i) => (
                   <div
                     key={`${b.id}-${i}`}
-                    className="flex h-full shrink-0 flex-col items-center justify-center rounded-lg border bg-card p-2 text-center shadow-sm"
+                    className={gachaSlotFrameClass(b.rarity as BrainrotRarity)}
                     style={{ width: SLOT_PX }}
                   >
-                    {isArtPath(b.image) ? (
-                      <Image
-                        src={b.image}
-                        alt=""
-                        width={72}
-                        height={72}
-                        className="rounded-md object-cover"
-                      />
-                    ) : (
-                      <span className="text-5xl">{b.image}</span>
-                    )}
-                    <span className="mt-1 line-clamp-2 text-[10px] font-medium leading-tight">{b.name}</span>
+                    <div className="flex h-full min-h-[7.5rem] flex-col items-center justify-center rounded-md bg-card p-2 text-center shadow-sm">
+                      {isArtPath(b.image) ? (
+                        <Image
+                          src={b.image}
+                          alt=""
+                          width={72}
+                          height={72}
+                          className="rounded-md object-cover"
+                        />
+                      ) : (
+                        <span className="text-5xl">{b.image}</span>
+                      )}
+                      <span className="mt-1 line-clamp-2 text-[10px] font-medium leading-tight">{b.name}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : phase === "revealed" && winner ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 py-2">
                 <div className="relative">
-                  <div className="absolute inset-0 animate-pulse rounded-2xl bg-amber-500/25 blur-xl" />
-                  {isArtPath(winner.image) ? (
-                    <Image
-                      src={winner.image}
-                      alt=""
-                      width={120}
-                      height={120}
-                      className="relative rounded-2xl border-2 border-amber-400/60 object-cover shadow-lg"
-                    />
-                  ) : (
-                    <span className="relative text-8xl">{winner.image}</span>
-                  )}
+                  <div className="pointer-events-none absolute inset-0 animate-pulse rounded-3xl bg-amber-500/20 blur-xl" />
+                  <div
+                    className={`relative ${gachaRevealFrameClass(winner.rarity as BrainrotRarity)}`}
+                  >
+                    <div className="rounded-xl bg-card p-1 shadow-inner">
+                      {isArtPath(winner.image) ? (
+                        <Image
+                          src={winner.image}
+                          alt=""
+                          width={120}
+                          height={120}
+                          className="rounded-lg object-cover shadow-lg"
+                        />
+                      ) : (
+                        <span className="flex min-h-[120px] min-w-[120px] items-center justify-center text-8xl">
+                          {winner.image}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold">{winner.name}</h3>
