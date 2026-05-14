@@ -100,7 +100,7 @@ function pushTier(
       id: String(id),
       name,
       rarity,
-      image: `/brainrots/br-${id}.svg`,
+      image: `/brainrots/br-${id}.png`,
     });
     id += 1;
   }
