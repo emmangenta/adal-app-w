@@ -213,7 +213,7 @@ export function GachaPage() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Case Opening</h1>
         <p className="text-muted-foreground">
-          CS:GO-style reel — spend coins to unlock collectible brainrots.
+          Spend your hard earned coins to open cases and unlock collectible Brainrots! Each case has a chance to drop a new Brainrot for your collection, with rarer Brainrots being more elusive. GOLD, GOLD GOLD!
         </p>
       </div>
 

@@ -71,7 +71,7 @@ export function CollectionPage() {
           <TabsTrigger value="common">Common ({commonBrainrots.length})</TabsTrigger>
           <TabsTrigger value="rare">Rare ({rareBrainrots.length})</TabsTrigger>
           <TabsTrigger value="epic">Epic ({epicBrainrots.length})</TabsTrigger>
-          <TabsTrigger value="legendary">Legend ({legendaryBrainrots.length})</TabsTrigger>
+          <TabsTrigger value="legendary">Legendary ({legendaryBrainrots.length})</TabsTrigger>
           <TabsTrigger value="ultra">
             Ultra ({ultraBrainrots.length})
           </TabsTrigger>

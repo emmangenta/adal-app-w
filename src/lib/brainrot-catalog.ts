@@ -156,6 +156,22 @@ export function pickLockedBrainrotWeighted<T extends { id: string; rarity: Brain
 }
 
 export function formatRarityLabel(rarity: BrainrotRarity): string {
-  if (rarity === "brainrot_god") return "Brainrot God";
-  return rarity;
+  switch (rarity) {
+    case "common":
+      return "Common";
+    case "rare":
+      return "Rare";
+    case "epic":
+      return "Legend";
+    case "legendary":
+      return "Ultra";
+    case "mythic":
+      return "Mythic";
+    case "brainrot_god":
+      return "Brainrot God";
+    case "secret":
+      return "Secret";
+    default:
+      return rarity;
+  }
 }
