@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Skibidi Scholar">
-  <defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs>
-  <rect width="120" height="120" rx="20" fill="url(#a)"/>
-  <circle cx="60" cy="52" r="22" fill="#fff" opacity="0.95"/>
-  <circle cx="52" cy="48" r="4" fill="#1e1b4b"/><circle cx="68" cy="48" r="4" fill="#1e1b4b"/>
-  <path d="M48 62 Q60 72 72 62" fill="none" stroke="#1e1b4b" stroke-width="3" stroke-linecap="round"/>
-  <text x="60" y="102" text-anchor="middle" fill="#fff" font-size="11" font-family="system-ui,sans-serif" font-weight="700">Skibidi</text>
-</svg>

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Fanum Taxinator">
-  <defs><linearGradient id="e" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9333ea"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs>
-  <rect width="120" height="120" rx="20" fill="url(#e)"/>
-  <polygon points="60,28 92,88 28,88" fill="#fff" opacity="0.95"/>
-  <circle cx="52" cy="62" r="5" fill="#4c1d95"/><circle cx="68" cy="62" r="5" fill="#4c1d95"/>
-  <path d="M50 74h20" stroke="#4c1d95" stroke-width="3" stroke-linecap="round"/>
-  <text x="60" y="106" text-anchor="middle" fill="#fff" font-size="9" font-family="system-ui,sans-serif" font-weight="700">Fanum Tax</text>
-</svg>

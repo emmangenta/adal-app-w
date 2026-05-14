@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Rizzler Rex">
-  <defs><linearGradient id="c" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
-  <rect width="120" height="120" rx="20" fill="url(#c)"/>
-  <path d="M30 70 Q60 20 90 70 L90 88 Q60 100 30 88Z" fill="#fff" opacity="0.95"/>
-  <circle cx="48" cy="58" r="5" fill="#0f172a"/><circle cx="72" cy="58" r="5" fill="#0f172a"/>
-  <path d="M52 72 Q60 80 68 72" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
-  <text x="60" y="108" text-anchor="middle" fill="#fff" font-size="10" font-family="system-ui,sans-serif" font-weight="700">Rizzler</text>
-</svg>

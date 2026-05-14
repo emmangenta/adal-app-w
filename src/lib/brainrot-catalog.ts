@@ -28,65 +28,65 @@ export const BRAINROT_TIER_WEIGHTS: Record<BrainrotRarity, number> = {
 };
 
 const COMMON_NAMES = [
-  "Skibidi Scholar",
-  "Ohio Oracle",
-  "Mewing Maven",
-  "Bio Baddie",
-  "Mitochondria Menace",
-  "ATP Goblin",
-  "Cell Wall Chad",
-  "Phloem Phantom",
-  "Golgi Grindset",
-  "Lysosome Legend",
-  "Ribosome Rizz",
-  "Vacuole Vandal",
-  "Chloroplast Chud",
-  "Nucleus Nerd",
-  "Enzyme Emperor",
+  "Noobini Pizzanini",
+  "Lirilì Larilà",
+  "Tim Cheese",
+  "Fluriflura",
+  "Talpa Di Fero",
+  "Svinina Bombardino",
+  "Cocofanto Elefanto",
+  "Pipi Kiwi",
+  "Raccooni Jandelini",
+  "Tartaragno",
+  "Pipi Corni",
+  "Holy Arepa",
+  "Smurf Cat",
+  "Skibidi Toilet",
+  "John Pork",
 ];
 
 const RARE_NAMES = [
-  "Rizzler Rex",
-  "Gyatt Golem",
-  "Aura Farmer",
-  "Fanum Taxinator",
-  "Sigma Skeleton",
-  "Cap No Capper",
-  "Based Blob",
-  "Glizzy Gladiator",
-  "Clavicle Clown",
-  "Cortex Crusader",
-  "Dendrite Demon",
-  "Axon Assassin",
+  "Trippi Troppi",
+  "Gangster Footera",
+  "Bandito Bobritto",
+  "Boneca Ambalabu",
+  "Cacto Hipopotamo",
+  "Ta Ta Ta Ta Sahur",
+  "Tric Trac Baraboom",
+  "Burbaloni Loliloli",
+  "Chimpanzini Bananini",
+  "Ballerina Cappuccina",
+  "Blueberrinni Octopusini",
+  "Cappuccino Assassino",
 ];
 
 const EPIC_NAMES = [
-  "Grimace Giga-Chad",
-  "Baby Gronkulus",
-  "Tax Fraud Turtle",
-  "Ohio Final Boss",
+  "Brr Brr Patapim",
+  "Bombardilo Crocodilo",
+  "Tralalero Tralala",
+  "Tralalita Tralala",
   "Skibidi Toilet Titan",
-  "Rizzquake",
-  "Gyatt Laser",
-  "Fanum Feast",
-  "Sigma Singularity",
-  "Mythic Mewer",
+  "Odin Din Din Dun",
+  "La Vacca Saturno Saturnita",
+  "Job Job Job Sahur",
+  "Strawberry Elephant",
+  "Bisonte Giupiterre",
 ];
 
 const LEGENDARY_NAMES = [
-  "Capstone No-Cap",
-  "Galaxy Goblin",
-  "Chromosome Chad",
-  "Evolution Emperor",
-  "Taxonomy Tyrant",
-  "Ecosystem Eldritch",
+  "Charlie Kirk",
+  "Tatay Dihh",
+  "SAY WALLAHI BRO",
+  "The Ultimate Larper",
+  "Tung Tung Tung Sahur",
+  "Yakub",
 ];
 
-const MYTHIC_NAMES = ["Helix Horror", "Darwin's Demon", "Quantum Quokka"];
+const MYTHIC_NAMES = ["Clavicular", "Sophie Rain", "Adin Ross"];
 
-const GOD_NAMES = ["Brainrot Overlord", "Primordial Pepe"];
+const GOD_NAMES = ["P.Diddy", "Big Stein"];
 
-const SECRET_NAMES = ["The Forbidden Fold"];
+const SECRET_NAMES = ["Big Ben Yahu"];
 
 function pushTier(
   out: BrainrotCatalogEntry[],
