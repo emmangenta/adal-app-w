@@ -20,7 +20,7 @@ import { gachaRevealFrameClass, gachaSlotFrameClass } from "@/lib/brainrot-rarit
 const ROLL_COST = 10;
 const WIN_INDEX = 42;
 const REEL_LEN = 55;
-const SLOT_PX = 108;
+const SLOT_PX = 140;
 /** Must match reel row: gap-2 (8px) between slots */
 const REEL_GAP_PX = 8;
 /** Must match reel row: px-2 horizontal padding inside the translated strip */
@@ -234,7 +234,7 @@ export function GachaPage() {
         <CardContent className="p-8 space-y-8">
           <div
             ref={viewportRef}
-            className={`relative h-40 rounded-xl border-2 bg-muted/40 overflow-hidden transition-[border-color,box-shadow] duration-500 ${viewportAccent(
+            className={`relative h-72 rounded-xl border-2 bg-muted/40 overflow-hidden transition-[border-color,box-shadow] duration-500 ${viewportAccent(
               winner?.rarity as BrainrotRarity | undefined,
               phase
             )}`}
@@ -250,7 +250,7 @@ export function GachaPage() {
 
             {phase === "rolling" && strip.length > 0 ? (
               <div
-                className="absolute left-0 top-1/2 flex h-32 -translate-y-1/2 items-stretch gap-2 px-2 will-change-transform"
+                className="absolute left-0 top-1/2 flex h-64 -translate-y-1/2 items-stretch gap-2 px-2 will-change-transform"
                 style={{
                   transform: `translateX(${translateX}px)`,
                   transition:
@@ -266,17 +266,17 @@ export function GachaPage() {
                     className={gachaSlotFrameClass(b.rarity as BrainrotRarity)}
                     style={{ width: SLOT_PX }}
                   >
-                    <div className="flex h-full min-h-[7.5rem] flex-col items-center justify-center rounded-md bg-card p-2 text-center shadow-sm">
+                    <div className="flex h-full min-h-[9rem] flex-col items-center justify-center rounded-md bg-card p-2 text-center shadow-sm">
                       {isArtPath(b.image) ? (
                         <Image
                           src={b.image}
                           alt=""
-                          width={72}
-                          height={72}
+                          width={96}
+                          height={96}
                           className="rounded-md object-cover"
                         />
                       ) : (
-                        <span className="text-5xl">{b.image}</span>
+                        <span className="text-6xl">{b.image}</span>
                       )}
                       <span className="mt-1 line-clamp-2 text-[10px] font-medium leading-tight">{b.name}</span>
                     </div>
@@ -295,12 +295,12 @@ export function GachaPage() {
                         <Image
                           src={winner.image}
                           alt=""
-                          width={120}
-                          height={120}
+                          width={180}
+                          height={180}
                           className="rounded-lg object-cover shadow-lg"
                         />
                       ) : (
-                        <span className="flex min-h-[120px] min-w-[120px] items-center justify-center text-8xl">
+                        <span className="flex min-h-[180px] min-w-[180px] items-center justify-center text-9xl">
                           {winner.image}
                         </span>
                       )}
@@ -308,7 +308,7 @@ export function GachaPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold">{winner.name}</h3>
+                  <h3 className="text-3xl font-bold">{winner.name}</h3>
                   <div
                     className={`mt-2 inline-flex rounded-full border px-4 py-1 ${
                       rarityColors[winner.rarity as BrainrotRarity]

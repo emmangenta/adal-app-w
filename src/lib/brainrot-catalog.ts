@@ -18,13 +18,13 @@ export interface BrainrotCatalogEntry {
 
 /** Relative weights (normalized at roll time). Mirrors requested economy. */
 export const BRAINROT_TIER_WEIGHTS: Record<BrainrotRarity, number> = {
-  common: 67,
+  common: 50,
   rare: 30,
-  epic: 15,
-  legendary: 2,
-  mythic: 0.67,
-  brainrot_god: 0.067,
-  secret: 0.0067,
+  epic: 12,
+  legendary: 5,
+  mythic: 2,
+  brainrot_god: 0.5,
+  secret: 0.05,
 };
 
 const COMMON_NAMES = [
@@ -120,13 +120,13 @@ pushTier(_catalog, SECRET_NAMES, "secret", n);
 export const BRAINROT_CATALOG_BASE: BrainrotCatalogEntry[] = _catalog;
 
 const TIER_ORDER: BrainrotRarity[] = [
-  "secret",
-  "brainrot_god",
-  "mythic",
-  "legendary",
-  "epic",
-  "rare",
   "common",
+  "rare",
+  "epic",
+  "legendary",
+  "mythic",
+  "brainrot_god",
+  "secret",
 ];
 
 export function pickWeightedTier(): BrainrotRarity {
@@ -162,9 +162,9 @@ export function formatRarityLabel(rarity: BrainrotRarity): string {
     case "rare":
       return "Rare";
     case "epic":
-      return "Legend";
+      return "Epic";
     case "legendary":
-      return "Ultra";
+      return "Legendary";
     case "mythic":
       return "Mythic";
     case "brainrot_god":
