@@ -129,7 +129,7 @@ export function FeynmanMode() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Feynman Mode</h1>
         <p className="text-muted-foreground">
-          Explain a topic in plain language — Gemini checks accuracy against the real idea, then you can
+          Explain a topic in plain language — A third party AI checks accuracy against the real idea, then you can
           keep chatting.
         </p>
       </div>
@@ -216,7 +216,7 @@ export function FeynmanMode() {
               ) : (
                 <>
                   <Sparkles className="size-4" />
-                  Evaluate with Gemini
+                  Evaluate with AI
                 </>
               )}
             </Button>

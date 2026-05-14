@@ -263,7 +263,7 @@ export function UploadPage() {
             <div>
               <p className="font-medium">AI Analysis</p>
               <p className="text-sm text-muted-foreground">
-                Our AI reads and understands your documents
+                A third party AI reads and understands your documents
               </p>
             </div>
           </div>
