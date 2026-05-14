@@ -8,17 +8,17 @@ import {
   useEffect,
   useCallback,
 } from "react";
-
-/** Level from lifetime XP: level 1 at 0–99 XP, level 2 at 100–199, … */
-function levelFromTotalXp(xp: number): number {
-  return Math.floor(Math.max(0, xp) / 100) + 1;
-}
 import { toast } from "sonner";
 import { DEMO_KEYS } from "@/lib/client-demo-storage";
 import type { StoredDeck } from "@/lib/study-deck-types";
 import { loadDecksForUser, persistDecksForUser } from "@/lib/deck-idb";
 import { sanitizeStoredDeck } from "@/lib/deck-sanitize";
 import { BRAINROT_CATALOG_BASE } from "@/lib/brainrot-catalog";
+
+/** Level from lifetime XP: level 1 at 0–99 XP, level 2 at 100–199, … */
+function levelFromTotalXp(xp: number): number {
+  return Math.floor(Math.max(0, xp) / 100) + 1;
+}
 
 export type { StoredFlashcard, StoredQuiz, StoredDeck } from "@/lib/study-deck-types";
 
@@ -158,8 +158,21 @@ function syncUserToRegistry(updated: User) {
   }
 }
 
+/**
+ * Old builds registered users with every common pre-unlocked at count 0.
+ * Gacha always sets count >= 1 on first unlock, so count===0 + unlocked common is unearned legacy data.
+ */
+function stripLegacyFreeCommonBrainrots(brainrots: Brainrot[] | undefined): Brainrot[] | undefined {
+  if (!brainrots?.length) return brainrots;
+  const filtered = brainrots.filter(
+    (b) => !(b.rarity === "common" && b.unlocked && (b.count ?? 0) === 0)
+  );
+  return filtered.length === brainrots.length ? brainrots : filtered;
+}
+
 function brainrotsFromUser(user: User | null): Brainrot[] {
-  const unlockedMap = new Map(user?.brainrots?.map((b) => [b.id, { unlocked: b.unlocked, count: b.count }]) ?? []);
+  const cleaned = stripLegacyFreeCommonBrainrots(user?.brainrots) ?? user?.brainrots ?? [];
+  const unlockedMap = new Map(cleaned.map((b) => [b.id, { unlocked: b.unlocked, count: b.count }]));
   return initialBrainrots.map((b) => ({
     ...b,
     unlocked: unlockedMap.get(b.id)?.unlocked ?? false,
@@ -199,12 +212,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(raw) as User;
         if (cancelled) return;
+        const cleanedBrainrots = stripLegacyFreeCommonBrainrots(parsed.brainrots) ?? parsed.brainrots;
+        const normalized =
+          cleanedBrainrots === parsed.brainrots
+            ? parsed
+            : { ...parsed, brainrots: cleanedBrainrots };
         setUser({
-          ...parsed,
+          ...normalized,
           level: levelFromTotalXp(parsed.xp),
         });
         setUserId(parsed.id);
-        setBrainrots(brainrotsFromUser(parsed));
+        setBrainrots(brainrotsFromUser(normalized));
         const loadedDecks = await loadDecksForUser(parsed.id);
         if (!cancelled) setDecks(loadedDecks);
 
@@ -259,18 +277,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const cur = JSON.parse(raw) as User;
         if (cur.id === fromRegistry.id) {
+          const mergedBrainrots = cur.brainrots ?? fromRegistry.brainrots;
+          const cleaned = stripLegacyFreeCommonBrainrots(mergedBrainrots) ?? mergedBrainrots;
           sessionUser = {
             ...fromRegistry,
             xp: cur.xp,
             coins: cur.coins,
             level: levelFromTotalXp(cur.xp),
-            brainrots: cur.brainrots ?? fromRegistry.brainrots,
+            brainrots: cleaned,
           };
         }
       }
     } catch {
       /* use registry only */
     }
+
+    const loginCleaned = stripLegacyFreeCommonBrainrots(sessionUser.brainrots) ?? sessionUser.brainrots;
+    sessionUser =
+      loginCleaned === sessionUser.brainrots ? sessionUser : { ...sessionUser, brainrots: loginCleaned };
 
     setUser(sessionUser);
     setUserId(sessionUser.id);
@@ -294,17 +318,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw new Error("Username already taken");
     }
 
-    const commonUnlocked = initialBrainrots
-      .filter((b) => b.rarity === "common")
-      .map((b) => ({ ...b, unlocked: true as const }));
-
     const newUser: User = {
       id: generateId(),
       username,
       xp: 0,
       level: 1,
       coins: 0,
-      brainrots: commonUnlocked,
+      brainrots: [],
     };
 
     users.push({ ...newUser, password });
