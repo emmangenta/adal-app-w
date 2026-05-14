@@ -62,15 +62,15 @@ const RARE_NAMES = [
 
 const EPIC_NAMES = [
   "Brr Brr Patapim",
-  "Bombardilo Crocodilo",
+  "Bombardino Crocodilo",
   "Tralalero Tralala",
   "Tralalita Tralala",
-  "Skibidi Toilet Titan",
+  "Greng Greng Greng Bus Ireng",
   "Odin Din Din Dun",
   "La Vacca Saturno Saturnita",
   "Job Job Job Sahur",
   "Strawberry Elephant",
-  "Bisonte Giupiterre",
+  "Bisonte Giuppiterre",
 ];
 
 const LEGENDARY_NAMES = [
@@ -82,7 +82,7 @@ const LEGENDARY_NAMES = [
   "Yakub",
 ];
 
-const MYTHIC_NAMES = ["Clavicular", "Sophie Rain", "Adin Ross"];
+const MYTHIC_NAMES = ["Clavicular", "MrBeast", "Donald Trump"];
 
 const GOD_NAMES = ["P.Diddy", "Big Stein"];
 
