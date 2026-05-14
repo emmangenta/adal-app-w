@@ -24,7 +24,7 @@ interface Deck {
 }
 
 export function StudyMode() {
-  const { userId, decks } = useApp();
+  const { userId, decks, user, isLoading } = useApp();
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [mode, setMode] = useState<"quiz" | "flashcards">("quiz");
 
@@ -58,7 +58,15 @@ export function StudyMode() {
     }
   }, [deckSummaries, selectedDeckId]);
 
-  if (!userId) {
+  if (isLoading) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!userId || !user) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-8">
         <Card>
@@ -191,22 +199,35 @@ export function StudyMode() {
 
 function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
   const { addXP, addCoins } = useApp();
+  const validQuizzes = useMemo(
+    () =>
+      quizzes.filter(
+        (q) =>
+          q &&
+          typeof q.question === "string" &&
+          Array.isArray(q.options) &&
+          q.options.length >= 2 &&
+          typeof q.correctOption === "number"
+      ),
+    [quizzes]
+  );
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
 
-  const question = quizzes[currentQuestion];
-  const progress = ((currentQuestion + 1) / quizzes.length) * 100;
+  const question = validQuizzes[currentQuestion];
+  const progress =
+    validQuizzes.length > 0 ? ((currentQuestion + 1) / validQuizzes.length) * 100 : 0;
 
   const handleAnswerSelect = (index: number) => {
-    if (showResult) return;
+    if (showResult || !question) return;
     setSelectedAnswer(index);
   };
 
   const handleSubmit = () => {
-    if (selectedAnswer === null) return;
+    if (selectedAnswer === null || !question) return;
 
     setShowResult(true);
 
@@ -223,7 +244,8 @@ function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
   };
 
   const handleNext = () => {
-    if (currentQuestion < quizzes.length - 1) {
+    if (!question) return;
+    if (currentQuestion < validQuizzes.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setShowResult(false);
@@ -245,8 +267,20 @@ function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
     setCompleted(false);
   };
 
+  if (validQuizzes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-muted-foreground text-center">
+            No usable quiz questions in this deck (some items were invalid and skipped).
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (completed) {
-    const percentage = (score / quizzes.length) * 100;
+    const percentage = (score / validQuizzes.length) * 100;
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -259,7 +293,7 @@ function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
           <CardContent className="space-y-6 text-center">
             <div>
               <div className="text-6xl font-bold mb-2">
-                {score}/{quizzes.length}
+                {score}/{validQuizzes.length}
               </div>
               <p className="text-xl text-muted-foreground">
                 {percentage >= 80
@@ -291,7 +325,7 @@ function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>
-            Question {currentQuestion + 1} of {quizzes.length}
+            Question {currentQuestion + 1} of {validQuizzes.length}
           </span>
           <span>Score: {score}</span>
         </div>
@@ -363,7 +397,7 @@ function QuizMode({ quizzes }: { quizzes: StoredQuiz[] }) {
                   </Button>
                 ) : (
                   <Button onClick={handleNext} className="flex-1 gap-2">
-                    {currentQuestion < quizzes.length - 1 ? (
+                    {currentQuestion < validQuizzes.length - 1 ? (
                       <>
                         Next Question
                         <ChevronRight className="size-4" />

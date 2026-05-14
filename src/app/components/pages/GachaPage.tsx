@@ -8,7 +8,13 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { toast } from "sonner";
 import { Gift, Coins, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
+import {
+  pickLockedBrainrotWeighted,
+  formatRarityLabel,
+  BRAINROT_TIER_WEIGHTS,
+  type BrainrotRarity,
+} from "@/lib/brainrot-catalog";
+import { firePullCelebration } from "@/lib/gacha-celebration";
 
 const ROLL_COST = 10;
 const WIN_INDEX = 42;
@@ -19,29 +25,6 @@ const REEL_GAP_PX = 8;
 /** Must match reel row: px-2 horizontal padding inside the translated strip */
 const REEL_PAD_PX = 8;
 const SPIN_MS = 4800;
-
-function pickLockedBrainrot(locked: Brainrot[]): Brainrot | null {
-  if (locked.length === 0) return null;
-  const random = Math.random();
-  let selected: Brainrot | undefined;
-  if (random < 0.5) {
-    const pool = locked.filter((b) => b.rarity === "common");
-    selected = pool[Math.floor(Math.random() * pool.length)];
-  } else if (random < 0.8) {
-    const pool = locked.filter((b) => b.rarity === "rare");
-    selected =
-      pool[Math.floor(Math.random() * pool.length)] ?? locked[Math.floor(Math.random() * locked.length)];
-  } else if (random < 0.95) {
-    const pool = locked.filter((b) => b.rarity === "epic");
-    selected =
-      pool[Math.floor(Math.random() * pool.length)] ?? locked[Math.floor(Math.random() * locked.length)];
-  } else {
-    const pool = locked.filter((b) => b.rarity === "legendary");
-    selected =
-      pool[Math.floor(Math.random() * pool.length)] ?? locked[Math.floor(Math.random() * locked.length)];
-  }
-  return selected ?? locked[0];
-}
 
 function buildReel(winner: Brainrot, pool: Brainrot[]): Brainrot[] {
   const strip: Brainrot[] = [];
@@ -54,6 +37,46 @@ function buildReel(winner: Brainrot, pool: Brainrot[]): Brainrot[] {
 
 function isArtPath(image: string) {
   return image.startsWith("/");
+}
+
+function viewportAccent(
+  rarity: BrainrotRarity | undefined,
+  phase: "idle" | "rolling" | "revealed"
+): string {
+  if (phase !== "rolling" || !rarity) return "border-amber-500/40 shadow-inner";
+  switch (rarity) {
+    case "common":
+      return "border-slate-500/50 shadow-[inset_0_0_24px_rgba(148,163,184,0.25)]";
+    case "rare":
+      return "border-blue-400/60 shadow-[inset_0_0_28px_rgba(59,130,246,0.35)]";
+    case "epic":
+      return "border-purple-400/70 shadow-[inset_0_0_32px_rgba(168,85,247,0.45)]";
+    case "legendary":
+      return "border-amber-400/80 shadow-[inset_0_0_36px_rgba(245,158,11,0.45)]";
+    case "mythic":
+      return "border-cyan-400/80 shadow-[inset_0_0_40px_rgba(34,211,238,0.5)]";
+    case "brainrot_god":
+      return "border-red-500/70 shadow-[inset_0_0_48px_rgba(239,68,68,0.55)] animate-pulse";
+    case "secret":
+      return "border-fuchsia-400 shadow-[0_0_48px_rgba(217,70,239,0.55),inset_0_0_52px_rgba(250,204,21,0.35)]";
+    default:
+      return "border-amber-500/40";
+  }
+}
+
+function needleGlow(rarity: BrainrotRarity | undefined, phase: "idle" | "rolling" | "revealed"): string {
+  if (phase !== "rolling" || !rarity) return "bg-amber-500/90 shadow-[0_0_18px_rgba(245,158,11,0.9)]";
+  switch (rarity) {
+    case "secret":
+    case "brainrot_god":
+      return "bg-fuchsia-400 shadow-[0_0_28px_rgba(217,70,239,1)]";
+    case "mythic":
+      return "bg-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.95)]";
+    case "legendary":
+      return "bg-amber-300 shadow-[0_0_22px_rgba(251,191,36,0.95)]";
+    default:
+      return "bg-amber-500/90 shadow-[0_0_18px_rgba(245,158,11,0.9)]";
+  }
 }
 
 export function GachaPage() {
@@ -72,8 +95,8 @@ export function GachaPage() {
 
   const finalizeRoll = useCallback(
     (w: Brainrot) => {
+      firePullCelebration(w.rarity as BrainrotRarity);
       unlockBrainrot(w.id);
-      confetti({ particleCount: 120, spread: 75, origin: { y: 0.55 } });
       toast.success(`Unlocked: ${w.name}!`, {
         icon: isArtPath(w.image) ? (
           <Image src={w.image} alt="" width={28} height={28} className="rounded-md object-cover" />
@@ -101,7 +124,7 @@ export function GachaPage() {
       return;
     }
 
-    const w = pickLockedBrainrot(lockedBrainrots);
+    const w = pickLockedBrainrotWeighted(lockedBrainrots);
     if (!w) return;
 
     addCoins(-ROLL_COST);
@@ -152,11 +175,33 @@ export function GachaPage() {
 
   if (!user) return null;
 
-  const rarityColors = {
+  const rarityColors: Record<BrainrotRarity, string> = {
     common: "text-gray-600 bg-gray-500/10 border-gray-500/20",
     rare: "text-blue-600 bg-blue-500/10 border-blue-500/20",
     epic: "text-purple-600 bg-purple-500/10 border-purple-500/20",
     legendary: "text-amber-600 bg-amber-500/10 border-amber-500/20",
+    mythic: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20",
+    brainrot_god: "text-red-600 bg-red-500/10 border-red-500/20",
+    secret: "text-fuchsia-600 bg-fuchsia-500/10 border-fuchsia-500/20",
+  };
+
+  const weightSum = Object.values(BRAINROT_TIER_WEIGHTS).reduce((a, b) => a + b, 0);
+  const tierRateRows = (
+    Object.entries(BRAINROT_TIER_WEIGHTS) as [BrainrotRarity, number][]
+  ).map(([key, w]) => ({
+    key,
+    label: formatRarityLabel(key),
+    pct: `${((w / weightSum) * 100).toFixed(3)}%`,
+  }));
+
+  const tierRowShell: Record<BrainrotRarity, string> = {
+    common: "border-gray-500/20 bg-gray-500/10",
+    rare: "border-blue-500/20 bg-blue-500/10",
+    epic: "border-purple-500/20 bg-purple-500/10",
+    legendary: "border-amber-500/20 bg-amber-500/10",
+    mythic: "border-cyan-500/20 bg-cyan-500/10",
+    brainrot_god: "border-red-500/20 bg-red-500/10",
+    secret: "border-fuchsia-500/20 bg-fuchsia-500/10",
   };
 
   return (
@@ -185,9 +230,17 @@ export function GachaPage() {
         <CardContent className="p-8 space-y-8">
           <div
             ref={viewportRef}
-            className="relative h-40 rounded-xl border-2 border-amber-500/40 bg-muted/40 overflow-hidden shadow-inner"
+            className={`relative h-40 rounded-xl border-2 bg-muted/40 overflow-hidden transition-[border-color,box-shadow] duration-500 ${viewportAccent(
+              winner?.rarity as BrainrotRarity | undefined,
+              phase
+            )}`}
           >
-            <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-1 -translate-x-1/2 bg-amber-500/90 shadow-[0_0_18px_rgba(245,158,11,0.9)]" />
+            <div
+              className={`pointer-events-none absolute inset-y-0 left-1/2 z-10 w-1 -translate-x-1/2 transition-colors duration-300 ${needleGlow(
+                winner?.rarity as BrainrotRarity | undefined,
+                phase
+              )}`}
+            />
             <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-background to-transparent z-[5]" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent z-[5]" />
 
@@ -244,10 +297,10 @@ export function GachaPage() {
                   <h3 className="text-2xl font-bold">{winner.name}</h3>
                   <div
                     className={`mt-2 inline-flex rounded-full border px-4 py-1 ${
-                      rarityColors[winner.rarity as keyof typeof rarityColors]
+                      rarityColors[winner.rarity as BrainrotRarity]
                     }`}
                   >
-                    <span className="font-medium capitalize">{winner.rarity}</span>
+                    <span className="font-medium">{formatRarityLabel(winner.rarity as BrainrotRarity)}</span>
                   </div>
                 </div>
               </div>
@@ -302,22 +355,15 @@ export function GachaPage() {
           <CardDescription>Approximate drop weights</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between rounded-lg border border-gray-500/20 bg-gray-500/10 p-3">
-            <span className="font-medium">Common</span>
-            <span className="text-sm text-muted-foreground">50%</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
-            <span className="font-medium">Rare</span>
-            <span className="text-sm text-muted-foreground">30%</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">
-            <span className="font-medium">Epic</span>
-            <span className="text-sm text-muted-foreground">15%</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
-            <span className="font-medium">Legendary</span>
-            <span className="text-sm text-muted-foreground">5%</span>
-          </div>
+          {tierRateRows.map((row) => (
+            <div
+              key={row.key}
+              className={`flex items-center justify-between rounded-lg border p-3 ${tierRowShell[row.key]}`}
+            >
+              <span className="font-medium">{row.label}</span>
+              <span className="text-sm text-muted-foreground">{row.pct}</span>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

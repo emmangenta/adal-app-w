@@ -10,11 +10,24 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { DEMO_KEYS } from "@/lib/client-demo-storage";
+import type { StoredDeck } from "@/lib/study-deck-types";
+import { loadDecksForUser, persistDecksForUser } from "@/lib/deck-idb";
+import { sanitizeStoredDeck } from "@/lib/deck-sanitize";
+import { BRAINROT_CATALOG_BASE } from "@/lib/brainrot-catalog";
+
+export type { StoredFlashcard, StoredQuiz, StoredDeck } from "@/lib/study-deck-types";
 
 export interface Brainrot {
   id: string;
   name: string;
-  rarity: "common" | "rare" | "epic" | "legendary";
+  rarity:
+    | "common"
+    | "rare"
+    | "epic"
+    | "legendary"
+    | "mythic"
+    | "brainrot_god"
+    | "secret";
   image: string;
   unlocked: boolean;
 }
@@ -38,35 +51,6 @@ export interface Task {
   type: "daily" | "weekly" | "monthly";
 }
 
-export interface StoredFlashcard {
-  id: string;
-  deckId: string;
-  question: string;
-  answer: string;
-  createdAt: string;
-}
-
-export interface StoredQuiz {
-  id: string;
-  deckId: string;
-  question: string;
-  options: string[];
-  correctOption: number;
-  explanation: string;
-  createdAt: string;
-}
-
-export interface StoredDeck {
-  id: string;
-  name: string;
-  description: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  flashcards: StoredFlashcard[];
-  quizzes: StoredQuiz[];
-}
-
 interface AppContextType {
   user: User | null;
   userId: string | null;
@@ -86,20 +70,10 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const initialBrainrots: Brainrot[] = [
-  { id: "1", name: "Skibidi Scholar", rarity: "common", image: "/brainrots/br-1.svg", unlocked: true },
-  { id: "2", name: "Ohio Oracle", rarity: "common", image: "/brainrots/br-2.svg", unlocked: true },
-  { id: "3", name: "Rizzler Rex", rarity: "rare", image: "/brainrots/br-3.svg", unlocked: false },
-  { id: "4", name: "Gyatt Golem", rarity: "rare", image: "/brainrots/br-4.svg", unlocked: false },
-  { id: "5", name: "Fanum Taxinator", rarity: "epic", image: "/brainrots/br-5.svg", unlocked: false },
-  { id: "6", name: "Sigma Skeleton", rarity: "epic", image: "/brainrots/br-6.svg", unlocked: false },
-  { id: "7", name: "Grimace Giga-Chad", rarity: "legendary", image: "/brainrots/br-7.svg", unlocked: false },
-  { id: "8", name: "Baby Gronkulus", rarity: "legendary", image: "/brainrots/br-8.svg", unlocked: false },
-  { id: "9", name: "Mewing Maven", rarity: "common", image: "/brainrots/br-9.svg", unlocked: false },
-  { id: "10", name: "Aura Farmer", rarity: "rare", image: "/brainrots/br-10.svg", unlocked: false },
-  { id: "11", name: "Capstone No-Cap", rarity: "epic", image: "/brainrots/br-11.svg", unlocked: false },
-  { id: "12", name: "Based Blob", rarity: "legendary", image: "/brainrots/br-12.svg", unlocked: false },
-];
+const initialBrainrots: Brainrot[] = BRAINROT_CATALOG_BASE.map((b) => ({
+  ...b,
+  unlocked: b.rarity === "common",
+}));
 
 const initialTasks: Task[] = [
   {
@@ -178,10 +152,10 @@ function syncUserToRegistry(updated: User) {
 }
 
 function brainrotsFromUser(user: User | null): Brainrot[] {
-  if (!user?.brainrots?.length) {
-    return initialBrainrots.map((b) => ({ ...b, unlocked: b.rarity === "common" }));
+  const unlocked = new Set(user?.brainrots?.map((b) => b.id) ?? []);
+  for (const b of initialBrainrots) {
+    if (b.rarity === "common") unlocked.add(b.id);
   }
-  const unlocked = new Set(user.brainrots.map((b) => b.id));
   return initialBrainrots.map((b) => ({
     ...b,
     unlocked: unlocked.has(b.id),
@@ -205,35 +179,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const persistDecks = useCallback((uid: string, next: StoredDeck[]) => {
-    localStorage.setItem(DEMO_KEYS.decksForUser(uid), JSON.stringify(next));
-  }, []);
-
   const persistTasks = useCallback((uid: string, next: Task[]) => {
     localStorage.setItem(DEMO_KEYS.tasksForUser(uid), JSON.stringify(next));
   }, []);
 
   useEffect(() => {
-    const raw = localStorage.getItem(DEMO_KEYS.currentUser);
-    if (raw) {
+    let cancelled = false;
+    (async () => {
+      const raw = localStorage.getItem(DEMO_KEYS.currentUser);
+      if (!raw) {
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
       try {
         const parsed = JSON.parse(raw) as User;
+        if (cancelled) return;
         setUser(parsed);
         setUserId(parsed.id);
         setBrainrots(brainrotsFromUser(parsed));
-        const decksRaw = localStorage.getItem(DEMO_KEYS.decksForUser(parsed.id));
-        if (decksRaw) {
-          setDecks(JSON.parse(decksRaw) as StoredDeck[]);
-        }
+        const loadedDecks = await loadDecksForUser(parsed.id);
+        if (!cancelled) setDecks(loadedDecks);
+
         const tasksRaw = localStorage.getItem(DEMO_KEYS.tasksForUser(parsed.id));
-        if (tasksRaw) {
+        if (tasksRaw && !cancelled) {
           setTasks(JSON.parse(tasksRaw) as Task[]);
         }
       } catch (e) {
         console.error("Failed to restore demo session:", e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -241,8 +220,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user, persistUser]);
 
   useEffect(() => {
-    if (userId && decks.length >= 0) persistDecks(userId, decks);
-  }, [decks, userId, persistDecks]);
+    if (!userId) return;
+    (async () => {
+      try {
+        await persistDecksForUser(userId, decks);
+      } catch (e) {
+        console.error("Failed to persist decks:", e);
+      }
+    })();
+  }, [decks, userId]);
 
   useEffect(() => {
     if (userId && tasks.length >= 0) persistTasks(userId, tasks);
@@ -282,8 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUserId(sessionUser.id);
     setBrainrots(brainrotsFromUser(sessionUser));
 
-    const decksRaw = localStorage.getItem(DEMO_KEYS.decksForUser(sessionUser.id));
-    setDecks(decksRaw ? (JSON.parse(decksRaw) as StoredDeck[]) : []);
+    const loadedDecks = await loadDecksForUser(sessionUser.id);
+    setDecks(loadedDecks);
 
     const tasksRaw = localStorage.getItem(DEMO_KEYS.tasksForUser(sessionUser.id));
     setTasks(tasksRaw ? (JSON.parse(tasksRaw) as Task[]) : initialTasks);
@@ -322,7 +308,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setDecks([]);
     setTasks(initialTasks);
     localStorage.setItem(DEMO_KEYS.tasksForUser(newUser.id), JSON.stringify(initialTasks));
-    localStorage.setItem(DEMO_KEYS.decksForUser(newUser.id), JSON.stringify([]));
+    localStorage.setItem(DEMO_KEYS.deckIdsForUser(newUser.id), JSON.stringify([]));
   };
 
   const logout = () => {
@@ -363,7 +349,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const unlockBrainrot = (brainrotId: string) => {
     if (!user) return;
-    const def = initialBrainrots.find((b) => b.id === brainrotId);
+    const def = BRAINROT_CATALOG_BASE.find((b) => b.id === brainrotId);
     if (!def) return;
 
     const existing = user.brainrots ?? [];
@@ -380,7 +366,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addDeck = (deck: StoredDeck) => {
-    setDecks((prev) => [...prev, deck]);
+    setDecks((prev) => [...prev, sanitizeStoredDeck(deck)]);
   };
 
   return (

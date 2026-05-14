@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useApp } from "../../context/AppContext";
+import type { Brainrot } from "../../context/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Lock } from "lucide-react";
 import { motion } from "motion/react";
+import { formatRarityLabel } from "@/lib/brainrot-catalog";
 
 export function CollectionPage() {
   const { brainrots } = useApp();
@@ -15,16 +17,21 @@ export function CollectionPage() {
   const totalCount = brainrots.length;
   const completionPercentage = Math.round((unlockedCount / totalCount) * 100);
 
-  const rarityColors = {
+  const rarityColors: Record<string, string> = {
     common: "bg-gray-500/20 border-gray-500/50 text-gray-600 dark:text-gray-400",
     rare: "bg-blue-500/20 border-blue-500/50 text-blue-600 dark:text-blue-400",
     epic: "bg-purple-500/20 border-purple-500/50 text-purple-600 dark:text-purple-400",
     legendary: "bg-amber-500/20 border-amber-500/50 text-amber-600 dark:text-amber-400",
+    mythic: "bg-cyan-500/20 border-cyan-500/50 text-cyan-600 dark:text-cyan-400",
+    brainrot_god: "bg-red-500/20 border-red-500/50 text-red-600 dark:text-red-400",
+    secret: "bg-fuchsia-500/20 border-fuchsia-500/50 text-fuchsia-600 dark:text-fuchsia-400",
   };
 
-  const filterByRarity = (rarity: string) => {
-    return brainrots.filter((b) => b.rarity === rarity);
-  };
+  const filterByRarity = (rarity: Brainrot["rarity"]) => brainrots.filter((b) => b.rarity === rarity);
+
+  const ultraBrainrots = brainrots.filter((b) =>
+    ["mythic", "brainrot_god", "secret"].includes(b.rarity)
+  );
 
   const allBrainrots = brainrots;
   const commonBrainrots = filterByRarity("common");
@@ -59,12 +66,15 @@ export function CollectionPage() {
       </Card>
 
       <Tabs defaultValue="all">
-        <TabsList className="grid w-full max-w-2xl grid-cols-5">
+        <TabsList className="flex h-auto w-full max-w-full flex-wrap gap-1 overflow-x-auto pb-1">
           <TabsTrigger value="all">All ({totalCount})</TabsTrigger>
           <TabsTrigger value="common">Common ({commonBrainrots.length})</TabsTrigger>
           <TabsTrigger value="rare">Rare ({rareBrainrots.length})</TabsTrigger>
           <TabsTrigger value="epic">Epic ({epicBrainrots.length})</TabsTrigger>
-          <TabsTrigger value="legendary">Legendary ({legendaryBrainrots.length})</TabsTrigger>
+          <TabsTrigger value="legendary">Legend ({legendaryBrainrots.length})</TabsTrigger>
+          <TabsTrigger value="ultra">
+            Ultra ({ultraBrainrots.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
@@ -86,6 +96,10 @@ export function CollectionPage() {
         <TabsContent value="legendary" className="mt-6">
           <BrainrotGrid brainrots={legendaryBrainrots} rarityColors={rarityColors} />
         </TabsContent>
+
+        <TabsContent value="ultra" className="mt-6">
+          <BrainrotGrid brainrots={ultraBrainrots} rarityColors={rarityColors} />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -95,13 +109,7 @@ function BrainrotGrid({
   brainrots,
   rarityColors,
 }: {
-  brainrots: Array<{
-    id: string;
-    name: string;
-    rarity: "common" | "rare" | "epic" | "legendary";
-    unlocked: boolean;
-    image: string;
-  }>;
+  brainrots: Brainrot[];
   rarityColors: Record<string, string>;
 }) {
   return (
@@ -111,7 +119,7 @@ function BrainrotGrid({
           key={brainrot.id}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.05 }}
+          transition={{ delay: index * 0.03 }}
         >
           <Card
             className={`
@@ -139,9 +147,9 @@ function BrainrotGrid({
                     <p className="font-medium text-sm">{brainrot.name}</p>
                     <Badge
                       variant="outline"
-                      className={`capitalize ${rarityColors[brainrot.rarity]}`}
+                      className={`${rarityColors[brainrot.rarity] ?? rarityColors.epic}`}
                     >
-                      {brainrot.rarity}
+                      {formatRarityLabel(brainrot.rarity)}
                     </Badge>
                   </div>
                 </>
@@ -154,9 +162,9 @@ function BrainrotGrid({
                     <p className="font-medium text-sm text-muted-foreground">Locked</p>
                     <Badge
                       variant="outline"
-                      className={`capitalize ${rarityColors[brainrot.rarity]}`}
+                      className={`${rarityColors[brainrot.rarity] ?? rarityColors.epic}`}
                     >
-                      {brainrot.rarity}
+                      {formatRarityLabel(brainrot.rarity)}
                     </Badge>
                   </div>
                 </>
