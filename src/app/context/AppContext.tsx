@@ -35,6 +35,7 @@ export interface Brainrot {
     | "secret";
   image: string;
   unlocked: boolean;
+  count: number;
 }
 
 export interface User {
@@ -77,7 +78,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialBrainrots: Brainrot[] = BRAINROT_CATALOG_BASE.map((b) => ({
   ...b,
-  unlocked: b.rarity === "common",
+  unlocked: false,
+  count: 0,
 }));
 
 const initialTasks: Task[] = [
@@ -157,13 +159,11 @@ function syncUserToRegistry(updated: User) {
 }
 
 function brainrotsFromUser(user: User | null): Brainrot[] {
-  const unlocked = new Set(user?.brainrots?.map((b) => b.id) ?? []);
-  for (const b of initialBrainrots) {
-    if (b.rarity === "common") unlocked.add(b.id);
-  }
+  const unlockedMap = new Map(user?.brainrots?.map((b) => [b.id, { unlocked: b.unlocked, count: b.count }]) ?? []);
   return initialBrainrots.map((b) => ({
     ...b,
-    unlocked: unlocked.has(b.id),
+    unlocked: unlockedMap.get(b.id)?.unlocked ?? false,
+    count: unlockedMap.get(b.id)?.count ?? 0,
   }));
 }
 
@@ -380,17 +380,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const def = BRAINROT_CATALOG_BASE.find((b) => b.id === brainrotId);
       if (!def) return prev;
       const existing = prev.brainrots ?? [];
-      if (existing.some((b) => b.id === brainrotId)) return prev;
-      nextBrainrots = [...existing, { ...def, unlocked: true }];
+      const found = existing.find((b) => b.id === brainrotId);
+      if (found) {
+        nextBrainrots = existing.map((b) => 
+          b.id === brainrotId ? { ...b, count: b.count + 1 } : b
+        );
+      } else {
+        nextBrainrots = [...existing, { ...def, unlocked: true, count: 1 }];
+      }
       return { ...prev, brainrots: nextBrainrots };
     });
     queueMicrotask(() => {
       if (!nextBrainrots) return;
       setBrainrots(
-        initialBrainrots.map((b) => ({
-          ...b,
-          unlocked: nextBrainrots!.some((u) => u.id === b.id),
-        }))
+        initialBrainrots.map((b) => {
+          const brData = nextBrainrots!.find((u) => u.id === b.id);
+          return {
+            ...b,
+            unlocked: brData?.unlocked ?? false,
+            count: brData?.count ?? 0,
+          };
+        })
       );
     });
   }, []);

@@ -151,6 +151,9 @@ function BrainrotGrid({
                     >
                       {formatRarityLabel(brainrot.rarity)}
                     </Badge>
+                    {brainrot.count > 0 && (
+                      <p className="text-xs text-muted-foreground">×{brainrot.count}</p>
+                    )}
                   </div>
                 </>
               ) : (
